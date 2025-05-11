@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     #map {
-      height: 90vh;
+      height: 80vh;
       width: 100%;
     }
-    #controls {
+    #controls, #analytics {
       padding: 10px;
     }
     #sidebar {
@@ -33,7 +33,9 @@
   <div id="controls">
     <button onclick="startDrawing()">Start Drawing Zone</button>
     <button onclick="clearZones()">Clear All Zones</button>
+    <button onclick="exportCSV()">Export as CSV</button>
   </div>
+  <div id="analytics"></div>
   <div id="sidebar"></div>
   <div id="map"></div>
 
@@ -57,9 +59,17 @@
     let drawingManager;
 
     function initMap() {
+      const savedCenter = JSON.parse(localStorage.getItem("mapCenter"));
+      const defaultCenter = savedCenter || { lat: 36.7538, lng: 3.0588 }; // Algeria
+
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 40.7128, lng: -74.0060 },
+        center: defaultCenter,
         zoom: 12,
+      });
+
+      map.addListener("center_changed", () => {
+        const center = map.getCenter();
+        localStorage.setItem("mapCenter", JSON.stringify({ lat: center.lat(), lng: center.lng() }));
       });
 
       loadZones();
@@ -81,12 +91,15 @@
         const path = polygon.getPath().getArray().map(coord => ({ lat: coord.lat(), lng: coord.lng() }));
 
         const name = prompt("Enter a name for this zone:");
+        const status = prompt("Enter status (Pending, Visited, Completed):", "Pending");
+        const notes = prompt("Add any notes for this zone:", "");
+
         if (!name) {
           polygon.setMap(null);
           return;
         }
 
-        await db.collection("zones").add({ name, path });
+        await db.collection("zones").add({ name, path, status, notes });
         polygon.setMap(null);
         drawingManager.setMap(null);
         loadZones();
@@ -96,21 +109,33 @@
     async function loadZones() {
       const snapshot = await db.collection("zones").get();
       const sidebar = document.getElementById("sidebar");
+      const analytics = document.getElementById("analytics");
       sidebar.innerHTML = "<h4>Saved Zones</h4>";
+
+      let total = 0, pending = 0, visited = 0, completed = 0;
 
       snapshot.forEach(doc => {
         const zone = doc.data();
+        total++;
+        if (zone.status === "Pending") pending++;
+        if (zone.status === "Visited") visited++;
+        if (zone.status === "Completed") completed++;
+
+        let color = "#FF0000";
+        if (zone.status === "Visited") color = "#0000FF";
+        if (zone.status === "Completed") color = "#00FF00";
+
         const polygon = new google.maps.Polygon({
           paths: zone.path,
-          strokeColor: "#FF0000",
+          strokeColor: color,
           strokeOpacity: 0.8,
           strokeWeight: 2,
-          fillColor: "#FF0000",
+          fillColor: color,
           fillOpacity: 0.35,
           map: map,
         });
 
-        const infoWindow = new google.maps.InfoWindow({ content: `<strong>${zone.name}</strong>` });
+        const infoWindow = new google.maps.InfoWindow({ content: `<strong>${zone.name}</strong><br>Status: ${zone.status}<br>Notes: ${zone.notes}` });
 
         polygon.addListener("click", (e) => {
           infoWindow.setPosition(e.latLng);
@@ -118,12 +143,14 @@
         });
 
         const zoneDiv = document.createElement("div");
-        zoneDiv.innerHTML = `${zone.name} <button onclick="deleteZone('${doc.id}')">Delete</button>`;
+        zoneDiv.innerHTML = `${zone.name} [${zone.status}]<br>${zone.notes}<br><button onclick="deleteZone('${doc.id}')">Delete</button>`;
         zoneDiv.style.marginBottom = "8px";
         zoneDiv.style.borderBottom = "1px solid #ccc";
         zoneDiv.style.paddingBottom = "4px";
         sidebar.appendChild(zoneDiv);
       });
+
+      analytics.innerHTML = `<strong>Analytics:</strong> Total Zones: ${total}, Pending: ${pending}, Visited: ${visited}, Completed: ${completed}`;
     }
 
     async function deleteZone(id) {
@@ -141,6 +168,25 @@
         await batch.commit();
         loadZones();
       }
+    }
+
+    async function exportCSV() {
+      const snapshot = await db.collection("zones").get();
+      let csv = "Name,Status,Notes,Path\n";
+      snapshot.forEach(doc => {
+        const zone = doc.data();
+        const pathStr = zone.path.map(p => `(${p.lat}, ${p.lng})`).join(" | ");
+        csv += `${zone.name},${zone.status},"${zone.notes}","${pathStr}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.setAttribute("hidden", "");
+      a.href = url;
+      a.download = "zones.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   </script>
 
