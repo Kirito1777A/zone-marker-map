@@ -5,81 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>📍 Zone Marker Map</title>
     <style>
-        body, html {
-            margin: 0;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 300px;
-            height: 100%;
-            background: #f4f4f4;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.3);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-            padding: 20px;
-            z-index: 2;
-        }
-        .sidebar.open {
-            transform: translateX(0);
-        }
-        .toggle-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 3;
-            background: #4285f4;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .toggle-btn.open {
-            transform: rotate(180deg);
-        }
-        .lock-btn {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 3;
-            background: #666;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            cursor: pointer;
-        }
-        h2 {
-            margin-top: 0;
-        }
-        .zone-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 0 3px rgba(0,0,0,0.2);
-        }
-        .status-btn {
-            margin: 5px 5px 5px 0;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #fff;
-        }
-        .pending { background: #f4b400; }
-        .visited { background: #4285f4; }
-        .completed { background: #0f9d58; }
+        body, html { margin: 0; height: 100%; font-family: Arial, sans-serif; }
+        #map { height: 100%; width: 100%; }
+        .sidebar { position: fixed; top: 0; right: 0; width: 300px; height: 100%; background: #f4f4f4; box-shadow: -2px 0 5px rgba(0,0,0,0.3); transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; padding: 20px; z-index: 2; }
+        .sidebar.open { transform: translateX(0); }
+        .toggle-btn { position: fixed; top: 20px; right: 20px; z-index: 3; background: #4285f4; color: #fff; border: none; border-radius: 4px; padding: 10px; cursor: pointer; transition: transform 0.3s ease; }
+        .toggle-btn.open { transform: rotate(180deg); }
+        .lock-btn { position: fixed; top: 70px; right: 20px; z-index: 3; background: #666; color: #fff; border: none; border-radius: 4px; padding: 10px; cursor: pointer; }
+        h2 { margin-top: 0; }
+        .zone-item { margin-bottom: 10px; padding: 10px; background: #fff; border-radius: 4px; box-shadow: 0 0 3px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -93,12 +27,12 @@
     <h2>Saved Zones</h2>
     <div id="zoneList"></div>
     <hr />
-    <button onclick="exportCSV()">Export as CSV</button>
+    <button onclick="deleteAllZones()">🗑️ Delete All Zones</button><br/><br/>
+    <button onclick="exportCSV()">📄 Export as CSV</button>
     <h3>Analytics</h3>
     <p id="analytics"></p>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
@@ -115,7 +49,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let map, drawingManager;
+    let map;
+    let infoWindow;
 
     function initMap() {
         const lastLocation = JSON.parse(localStorage.getItem('lastLocation'));
@@ -126,105 +61,16 @@
             center: defaultCenter,
         });
 
-        drawingManager = new google.maps.drawing.DrawingManager({
-            drawingMode: null,
-            drawingControl: true,
-            drawingControlOptions: {
-                position: google.maps.ControlPosition.TOP_CENTER,
-                drawingModes: ['polygon'],
-            },
-            polygonOptions: {
-                editable: true,
-            },
-        });
+        infoWindow = new google.maps.InfoWindow();
 
-        drawingManager.setMap(map);
-
-        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-            const shape = event.overlay;
-            const path = shape.getPath().getArray().map(coord => ({
-                lat: coord.lat(),
-                lng: coord.lng()
-            }));
-
-            const name = prompt("Enter Zone Name:");
-            if (!name) {
-                shape.setMap(null);
-                return;
-            }
-
-            showStatusSelection().then(status => {
-                const notes = prompt("Enter Notes (optional):");
-                db.collection("zones").add({
-                    name: name,
-                    path: path,
-                    status: status,
-                    notes: notes || ""
-                }).then(loadZones);
-                shape.setMap(null);
-            }).catch(() => {
-                shape.setMap(null);
-            });
-        });
-
-        map.addListener('center_changed', () => {
-            const center = map.getCenter();
-            localStorage.setItem('lastLocation', JSON.stringify({
-                lat: center.lat(),
-                lng: center.lng()
-            }));
+        map.addListener('click', () => {
+            infoWindow.close();
         });
 
         loadZones();
-
         if (localStorage.getItem('sidebarLock') === 'true') {
             document.getElementById("sidebar").classList.add("open");
         }
-    }
-
-    function showStatusSelection() {
-        return new Promise((resolve, reject) => {
-            const overlay = document.createElement("div");
-            overlay.style.position = "fixed";
-            overlay.style.top = "0";
-            overlay.style.left = "0";
-            overlay.style.width = "100%";
-            overlay.style.height = "100%";
-            overlay.style.background = "rgba(0,0,0,0.5)";
-            overlay.style.display = "flex";
-            overlay.style.justifyContent = "center";
-            overlay.style.alignItems = "center";
-            overlay.style.zIndex = "9999";
-
-            const container = document.createElement("div");
-            container.style.background = "#fff";
-            container.style.padding = "20px";
-            container.style.borderRadius = "8px";
-            container.innerHTML = `<h3>Select Status</h3>`;
-
-            const btnContainer = document.createElement("div");
-            ["Pending", "Visited", "Completed"].forEach(status => {
-                const btn = document.createElement("button");
-                btn.className = `status-btn ${status.toLowerCase()}`;
-                btn.textContent = status;
-                btn.onclick = () => {
-                    document.body.removeChild(overlay);
-                    resolve(status.toLowerCase());
-                };
-                btnContainer.appendChild(btn);
-            });
-
-            container.appendChild(btnContainer);
-            overlay.appendChild(container);
-            document.body.appendChild(overlay);
-
-            overlay.onclick = (e) => {
-                if (e.target === overlay) {
-                    document.body.removeChild(overlay);
-                    reject();
-                }
-            };
-        });
     }
 
     function loadZones() {
@@ -254,8 +100,10 @@
                     fillOpacity: 0.35,
                 });
 
-                polygon.addListener('click', () => {
-                    map.fitBounds(getPolygonBounds(polygon));
+                polygon.addListener('click', (e) => {
+                    infoWindow.setContent(`<strong>${data.name}</strong><br>Status: ${data.status}<br>Notes: ${data.notes}`);
+                    infoWindow.setPosition(e.latLng);
+                    infoWindow.open(map);
                 });
             });
 
@@ -266,14 +114,6 @@
                 Completed: ${analytics.completed || 0}
             `;
         });
-    }
-
-    function getPolygonBounds(polygon) {
-        const bounds = new google.maps.LatLngBounds();
-        polygon.getPath().forEach(function(vertex) {
-            bounds.extend(vertex);
-        });
-        return bounds;
     }
 
     function getStatusColor(status) {
@@ -287,6 +127,16 @@
 
     function deleteZone(id) {
         db.collection("zones").doc(id).delete().then(loadZones);
+    }
+
+    function deleteAllZones() {
+        if (confirm("Are you sure you want to delete ALL zones? This cannot be undone.")) {
+            db.collection("zones").get().then(snapshot => {
+                const batch = db.batch();
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                batch.commit().then(loadZones);
+            });
+        }
     }
 
     function exportCSV() {
