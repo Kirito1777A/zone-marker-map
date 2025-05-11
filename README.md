@@ -1,8 +1,11 @@
 📍 Zone Marker Map
 
+
 A lightweight, cloud-synced web application to visually manage and track your work zones using Google Maps and Firebase. Ideal for field operations like distribution, sales visits, or city planning.
 
+
 🚀 Features
+
 ✅ Draw and Name Zones on Google Maps
 
 ✅ Cloud Sync with Firebase Firestore
@@ -23,7 +26,9 @@ A lightweight, cloud-synced web application to visually manage and track your wo
 
 ✅ Remembers Last Viewed Map Location or Defaults to Algeria
 
+
 📚 How to Use
+
 Add a Zone:
 
 Click ➕ Add Zone.
@@ -50,7 +55,9 @@ Analytics:
 
 Check the top analytics bar to see zone statistics by status.
 
+
 ⚙️ Setup & Configuration
+
 Google Maps API Key:
 
 Replace YOUR_GOOGLE_MAPS_API_KEY in index.html with your actual API key from Google Cloud Console.
@@ -62,6 +69,7 @@ Firebase is already set up using Firestore.
 You can adjust Firestore rules for data security as needed.
 
 📦 Deployment
+
 Hosted easily via GitHub Pages or any static site hosting service.
 
 Fully responsive and accessible from any device with a browser.
