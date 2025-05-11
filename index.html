@@ -1,235 +1,329 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Zone Marker Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-    header { background-color: #3f51b5; color: white; padding: 15px; text-align: center; }
-    #controls { display: flex; justify-content: center; gap: 10px; padding: 10px; background-color: #f1f1f1; }
-    #map { height: 75vh; width: 100%; }
-    #sidebar { position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background: #ffffff; border-left: 1px solid #ddd; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.1); padding: 20px; z-index: 1000; }
-    #analytics { background-color: #e0e0e0; padding: 15px; text-align: center; }
-    button { padding: 10px 15px; background-color: #3f51b5; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background-color: #303f9f; }
-    h2, h4 { margin: 0; padding-bottom: 10px; }
-    .zone-entry { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
-    .status-btns { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
-    .status-btns button { flex: 1; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📍 Zone Marker Map</title>
+    <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: #f4f4f4;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 2;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 3;
+            background: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-btn.open {
+            transform: rotate(180deg);
+        }
+        .lock-btn {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 3;
+            background: #666;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .zone-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+        }
+        .status-btn {
+            margin: 5px 5px 5px 0;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .pending { background: #f4b400; }
+        .visited { background: #4285f4; }
+        .completed { background: #0f9d58; }
+    </style>
 </head>
 <body>
-  <header>
-    <h2>📍 Zone Marker Map</h2>
-  </header>
-  <div id="controls">
-    <button onclick="startDrawing()">➕ Add Zone</button>
-    <button onclick="clearZones()">🗑️ Clear All</button>
-    <button onclick="exportCSV()">📄 Export CSV</button>
-  </div>
-  <div id="analytics"></div>
-  <div id="map"></div>
-  <div id="sidebar">
-    <h4>📌 Saved Zones</h4>
-    <div id="zone-list"></div>
-  </div>
 
+<div id="map"></div>
+
+<button class="toggle-btn" id="toggleButton" onclick="toggleSidebar()">☰ Zones</button>
+<button class="lock-btn" onclick="toggleLock()">📌</button>
+
+<div id="sidebar" class="sidebar">
+    <h2>Saved Zones</h2>
+    <div id="zoneList"></div>
+    <hr />
+    <button onclick="exportCSV()">Export as CSV</button>
+    <h3>Analytics</h3>
+    <p id="analytics"></p>
+</div>
+
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
-    authDomain: "zonemarkerapp.firebaseapp.com",
-    projectId: "zonemarkerapp",
-    storageBucket: "zonemarkerapp.firebasestorage.app",
-    messagingSenderId: "613702079615",
-    appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
+        authDomain: "zonemarkerapp.firebaseapp.com",
+        projectId: "zonemarkerapp",
+        storageBucket: "zonemarkerapp.firebasestorage.app",
+        messagingSenderId: "613702079615",
+        appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  let map;
-  let drawingManager;
+    let map, drawingManager;
 
-  function initMap() {
-    const savedCenter = JSON.parse(localStorage.getItem("mapCenter"));
-    const defaultCenter = savedCenter || { lat: 36.7538, lng: 3.0588 }; // Algeria
+    function initMap() {
+        const lastLocation = JSON.parse(localStorage.getItem('lastLocation'));
+        const defaultCenter = lastLocation || { lat: 36.7538, lng: 3.0588 };
 
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: defaultCenter,
-      zoom: 12,
-    });
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: defaultCenter,
+        });
 
-    map.addListener("center_changed", () => {
-      const center = map.getCenter();
-      localStorage.setItem("mapCenter", JSON.stringify({ lat: center.lat(), lng: center.lng() }));
-    });
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: null,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: ['polygon'],
+            },
+            polygonOptions: {
+                editable: true,
+            },
+        });
 
-    loadZones();
-  }
+        drawingManager.setMap(map);
 
-  function startDrawing() {
-    if (drawingManager) drawingManager.setMap(null);
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+            const shape = event.overlay;
+            const path = shape.getPath().getArray().map(coord => ({
+                lat: coord.lat(),
+                lng: coord.lng()
+            }));
 
-    drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: google.maps.drawing.OverlayType.POLYGON,
-      drawingControl: false,
-      polygonOptions: { editable: true },
-    });
+            const name = prompt("Enter Zone Name:");
+            if (!name) {
+                shape.setMap(null);
+                return;
+            }
 
-    drawingManager.setMap(map);
+            showStatusSelection().then(status => {
+                const notes = prompt("Enter Notes (optional):");
+                db.collection("zones").add({
+                    name: name,
+                    path: path,
+                    status: status,
+                    notes: notes || ""
+                }).then(loadZones);
+                shape.setMap(null);
+            }).catch(() => {
+                shape.setMap(null);
+            });
+        });
 
-    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-      const polygon = event.overlay;
-      const path = polygon.getPath().getArray().map(coord => ({ lat: coord.lat(), lng: coord.lng() }));
+        map.addListener('center_changed', () => {
+            const center = map.getCenter();
+            localStorage.setItem('lastLocation', JSON.stringify({
+                lat: center.lat(),
+                lng: center.lng()
+            }));
+        });
 
-      const name = prompt("Enter a name for this zone:");
-      if (!name) {
-        polygon.setMap(null);
-        return;
-      }
-
-      showStatusSelection().then(async (status) => {
-        const notes = prompt("Add any notes for this zone:", "");
-        await db.collection("zones").add({ name, path, status, notes });
-        polygon.setMap(null);
-        drawingManager.setMap(null);
         loadZones();
-      }).catch(() => {
-        polygon.setMap(null);
-      });
-    });
-  }
 
-  function showStatusSelection() {
-    return new Promise((resolve, reject) => {
-      const overlay = document.createElement("div");
-      overlay.style.position = "fixed";
-      overlay.style.top = "0";
-      overlay.style.left = "0";
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.background = "rgba(0,0,0,0.5)";
-      overlay.style.display = "flex";
-      overlay.style.justifyContent = "center";
-      overlay.style.alignItems = "center";
-      overlay.style.zIndex = "9999";
-
-      const container = document.createElement("div");
-      container.style.background = "#fff";
-      container.style.padding = "20px";
-      container.style.borderRadius = "8px";
-      container.innerHTML = `<h3>Select Status</h3>`;
-
-      const btnContainer = document.createElement("div");
-      btnContainer.className = "status-btns";
-
-      ["Pending", "Visited", "Completed"].forEach(status => {
-        const btn = document.createElement("button");
-        btn.textContent = status;
-        btn.onclick = () => {
-          document.body.removeChild(overlay);
-          resolve(status);
-        };
-        btnContainer.appendChild(btn);
-      });
-
-      container.appendChild(btnContainer);
-      overlay.appendChild(container);
-      document.body.appendChild(overlay);
-
-      overlay.onclick = (e) => {
-        if (e.target === overlay) {
-          document.body.removeChild(overlay);
-          reject();
+        if (localStorage.getItem('sidebarLock') === 'true') {
+            document.getElementById("sidebar").classList.add("open");
         }
-      };
-    });
-  }
-
-  async function loadZones() {
-    const snapshot = await db.collection("zones").get();
-    const zoneList = document.getElementById("zone-list");
-    const analytics = document.getElementById("analytics");
-    zoneList.innerHTML = "";
-
-    let total = 0, pending = 0, visited = 0, completed = 0;
-
-    snapshot.forEach(doc => {
-      const zone = doc.data();
-      total++;
-      if (zone.status === "Pending") pending++;
-      if (zone.status === "Visited") visited++;
-      if (zone.status === "Completed") completed++;
-
-      let color = "#FF0000";
-      if (zone.status === "Visited") color = "#0000FF";
-      if (zone.status === "Completed") color = "#00FF00";
-
-      const polygon = new google.maps.Polygon({
-        paths: zone.path,
-        strokeColor: color,
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: color,
-        fillOpacity: 0.35,
-        map: map,
-      });
-
-      const infoWindow = new google.maps.InfoWindow({ content: `<strong>${zone.name}</strong><br>Status: ${zone.status}<br>Notes: ${zone.notes}` });
-
-      polygon.addListener("click", (e) => {
-        infoWindow.setPosition(e.latLng);
-        infoWindow.open(map);
-      });
-
-      const zoneDiv = document.createElement("div");
-      zoneDiv.className = "zone-entry";
-      zoneDiv.innerHTML = `<strong>${zone.name}</strong> [${zone.status}]<br>${zone.notes}<br><button onclick="deleteZone('${doc.id}')">Delete</button>`;
-      zoneList.appendChild(zoneDiv);
-    });
-
-    analytics.innerHTML = `<strong>Analytics:</strong> Total Zones: ${total}, Pending: ${pending}, Visited: ${visited}, Completed: ${completed}`;
-  }
-
-  async function deleteZone(id) {
-    if (confirm("Are you sure you want to delete this zone?")) {
-      await db.collection("zones").doc(id).delete();
-      loadZones();
     }
-  }
 
-  async function clearZones() {
-    if (confirm("Are you sure you want to clear all zones?")) {
-      const snapshot = await db.collection("zones").get();
-      const batch = db.batch();
-      snapshot.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
-      loadZones();
+    function showStatusSelection() {
+        return new Promise((resolve, reject) => {
+            const overlay = document.createElement("div");
+            overlay.style.position = "fixed";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.background = "rgba(0,0,0,0.5)";
+            overlay.style.display = "flex";
+            overlay.style.justifyContent = "center";
+            overlay.style.alignItems = "center";
+            overlay.style.zIndex = "9999";
+
+            const container = document.createElement("div");
+            container.style.background = "#fff";
+            container.style.padding = "20px";
+            container.style.borderRadius = "8px";
+            container.innerHTML = `<h3>Select Status</h3>`;
+
+            const btnContainer = document.createElement("div");
+            ["Pending", "Visited", "Completed"].forEach(status => {
+                const btn = document.createElement("button");
+                btn.className = `status-btn ${status.toLowerCase()}`;
+                btn.textContent = status;
+                btn.onclick = () => {
+                    document.body.removeChild(overlay);
+                    resolve(status.toLowerCase());
+                };
+                btnContainer.appendChild(btn);
+            });
+
+            container.appendChild(btnContainer);
+            overlay.appendChild(container);
+            document.body.appendChild(overlay);
+
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                    reject();
+                }
+            };
+        });
     }
-  }
 
-  async function exportCSV() {
-    const snapshot = await db.collection("zones").get();
-    let csv = "Name,Status,Notes,Path\n";
-    snapshot.forEach(doc => {
-      const zone = doc.data();
-      const pathStr = zone.path.map(p => `(${p.lat}, ${p.lng})`).join(" | ");
-      csv += `${zone.name},${zone.status},"${zone.notes}","${pathStr}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("hidden", "");
-    a.href = url;
-    a.download = "zones.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+    function loadZones() {
+        db.collection("zones").get().then(snapshot => {
+            const zoneList = document.getElementById("zoneList");
+            zoneList.innerHTML = "";
+            const analytics = { total: 0, pending: 0, visited: 0, completed: 0 };
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                analytics.total++;
+                analytics[data.status] = (analytics[data.status] || 0) + 1;
+
+                const div = document.createElement("div");
+                div.className = "zone-item";
+                div.innerHTML = `<strong>${data.name}</strong><br/>
+                                 Status: ${data.status}<br/>
+                                 Notes: ${data.notes}<br/>
+                                 <button onclick="deleteZone('${doc.id}')">Delete</button>`;
+                zoneList.appendChild(div);
+
+                const polygon = new google.maps.Polygon({
+                    paths: data.path,
+                    map: map,
+                    strokeColor: "#FF0000",
+                    fillColor: getStatusColor(data.status),
+                    fillOpacity: 0.35,
+                });
+
+                polygon.addListener('click', () => {
+                    map.fitBounds(getPolygonBounds(polygon));
+                });
+            });
+
+            document.getElementById("analytics").innerText = `
+                Total Zones: ${analytics.total}  
+                Pending: ${analytics.pending || 0}  
+                Visited: ${analytics.visited || 0}  
+                Completed: ${analytics.completed || 0}
+            `;
+        });
+    }
+
+    function getPolygonBounds(polygon) {
+        const bounds = new google.maps.LatLngBounds();
+        polygon.getPath().forEach(function(vertex) {
+            bounds.extend(vertex);
+        });
+        return bounds;
+    }
+
+    function getStatusColor(status) {
+        switch(status) {
+            case "pending": return "#f4b400";
+            case "visited": return "#4285f4";
+            case "completed": return "#0f9d58";
+            default: return "#cccccc";
+        }
+    }
+
+    function deleteZone(id) {
+        db.collection("zones").doc(id).delete().then(loadZones);
+    }
+
+    function exportCSV() {
+        db.collection("zones").get().then(snapshot => {
+            let csv = "Name,Status,Notes,Coordinates\n";
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const coords = data.path.map(p => `(${p.lat}, ${p.lng})`).join(" ");
+                csv += `${data.name},${data.status},${data.notes},"${coords}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "zones.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const toggleBtn = document.getElementById("toggleButton");
+        sidebar.classList.toggle("open");
+        toggleBtn.classList.toggle("open");
+    }
+
+    function toggleLock() {
+        const sidebar = document.getElementById("sidebar");
+        const isLocked = sidebar.classList.contains("open");
+        localStorage.setItem('sidebarLock', isLocked);
+        alert(`Sidebar lock is now ${isLocked ? 'enabled' : 'disabled'}.`);
+    }
 </script>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKhCWAhc-rux8rPJeVJ-ZnuixnNscP_GQ&libraries=drawing&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKhCWAhc-rux8rPJeVJ-ZnuixnNscP_GQ&libraries=drawing&callback=initMap" async defer></script>
+
 </body>
 </html>
