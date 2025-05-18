@@ -276,7 +276,6 @@
         const polygon = L.polygon(data.path, {
           color: getZoneColor(data.status),
           fillOpacity: 0.5
-          interactive: false  // 👈 Add this line
         }).addTo(drawnItems);
 
         polygon.bindPopup(`<b>${data.name}</b><br>Status: ${data.status}<br>Notes: ${data.notes}`);
