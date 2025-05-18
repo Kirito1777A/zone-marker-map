@@ -9,19 +9,77 @@
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { width: 100%; height: 100%; }
+
     .sidebar {
-      position: absolute; top: 10px; left: 10px;
-      background: white; padding: 10px; border-radius: 5px;
-      z-index: 1000; max-height: 90%; overflow-y: auto;
-      box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    }
-    .zone-item { margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-    .search-bar {
-      position: absolute; top: 10px; right: 10px; z-index: 1000;
-      background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 8px rgba(0,0,0,0.2);
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 1000;
+      max-height: 90%;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      width: 260px;
     }
 
-    /* ✅ Move draw tools down and right */
+    .zone-item {
+      margin-bottom: 12px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 8px;
+    }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      width: 260px;
+    }
+
+    .controls input, .controls button {
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .status-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .status-popup-inner {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .status-popup-inner button {
+      margin: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .status-completed { background-color: #4caf50; color: white; }
+    .status-pending { background-color: #ff9800; color: white; }
+    .status-notreached { background-color: #f44336; color: white; }
+
     .leaflet-top.leaflet-left {
       top: 180px !important;
       left: 10px !important;
@@ -32,14 +90,26 @@
 <body>
 
 <div id="map"></div>
+
 <div class="sidebar">
-  <h3>Zones</h3>
+  <h3>📍 Zones</h3>
   <div id="zoneList"></div>
   <button onclick="exportZones()">📄 Export CSV</button>
 </div>
-<div class="search-bar">
+
+<div class="controls">
   <input type="text" id="searchInput" placeholder="Search area (e.g. Hydra)" />
-  <button onclick="searchPlace()">🔍</button>
+  <button onclick="searchPlace()">🔍 Search</button>
+  <p style="margin-top: 15px;"><strong>Draw a zone</strong> using the tool on the map.</p>
+</div>
+
+<div id="statusPopup" class="status-popup" style="display:none;">
+  <div class="status-popup-inner">
+    <h3>Select Status</h3>
+    <button class="status-completed" onclick="selectStatus('Completed')">✅ Completed</button>
+    <button class="status-pending" onclick="selectStatus('Pending')">🕓 Pending</button>
+    <button class="status-notreached" onclick="selectStatus('Not Reached')">❌ Not Reached</button>
+  </div>
 </div>
 
 <!-- Leaflet and Drawing Plugins -->
@@ -51,7 +121,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // 🔧 Replace this with your Firebase project config:
   const firebaseConfig = {
     apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
     authDomain: "zonemarkerapp.firebaseapp.com",
@@ -64,7 +133,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  let map = L.map('map').setView([36.7538, 3.0588], 12); // Algeria default
+  let map = L.map('map').setView([36.7538, 3.0588], 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
   const drawnItems = new L.FeatureGroup();
@@ -75,6 +144,10 @@
     edit: { featureGroup: drawnItems }
   });
   map.addControl(drawControl);
+
+  let newZoneLayer = null;
+  let newZoneName = "";
+  let newZoneNotes = "";
 
   function loadZones() {
     drawnItems.clearLayers();
@@ -112,25 +185,39 @@
 
   function getZoneColor(status) {
     switch (status.toLowerCase()) {
-      case "completed": return "green";
-      case "pending": return "orange";
-      case "not reached": return "red";
+      case "completed": return "#4caf50";
+      case "pending": return "#ff9800";
+      case "not reached": return "#f44336";
       default: return "gray";
     }
   }
 
   map.on(L.Draw.Event.CREATED, function (e) {
-    const layer = e.layer;
-    const path = layer.getLatLngs()[0].map(coord => ({ lat: coord.lat, lng: coord.lng }));
+    newZoneLayer = e.layer;
     const name = prompt("Zone Name:");
     if (!name) return;
-    const status = prompt("Status (Completed, Pending, Not Reached):");
     const notes = prompt("Notes (optional):");
+    newZoneName = name;
+    newZoneNotes = notes || "";
+    document.getElementById("statusPopup").style.display = "flex";
+  });
+
+  function selectStatus(status) {
+    const path = newZoneLayer.getLatLngs()[0].map(coord => ({
+      lat: coord.lat,
+      lng: coord.lng
+    }));
 
     db.collection("zones").add({
-      name, status: status.toLowerCase(), notes, path
-    }).then(loadZones);
-  });
+      name: newZoneName,
+      notes: newZoneNotes,
+      status: status.toLowerCase(),
+      path
+    }).then(() => {
+      document.getElementById("statusPopup").style.display = "none";
+      loadZones();
+    });
+  }
 
   function exportZones() {
     db.collection("zones").get().then(snapshot => {
