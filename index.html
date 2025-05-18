@@ -85,6 +85,26 @@
       left: 10px !important;
       z-index: 1001;
     }
+
+    /* Collapsible zone list */
+    #zoneListContainer {
+      transition: max-height 0.3s ease;
+      overflow: hidden;
+      max-height: 500px;
+    }
+    #zoneListContainer.hidden {
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .collapse-btn {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -92,8 +112,13 @@
 <div id="map"></div>
 
 <div class="sidebar">
-  <h3>📍 Zones</h3>
-  <div id="zoneList"></div>
+  <h3>
+    📍 Zones
+    <button class="collapse-btn" onclick="toggleZoneList()">📂</button>
+  </h3>
+  <div id="zoneListContainer">
+    <div id="zoneList"></div>
+  </div>
   <button onclick="exportZones()">📄 Export CSV</button>
 </div>
 
@@ -251,6 +276,11 @@
           alert("Place not found.");
         }
       });
+  }
+
+  function toggleZoneList() {
+    const container = document.getElementById("zoneListContainer");
+    container.classList.toggle("hidden");
   }
 
   loadZones();
