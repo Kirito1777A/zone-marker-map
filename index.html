@@ -2,28 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Zone Marker App (Safe Mode)</title>
+  <title>Zone Marker App (Mode Toggle)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
   <style>
-    html, body {
+    html, body, #map {
       margin: 0;
       padding: 0;
       height: 100%;
       width: 100%;
       font-family: Arial, sans-serif;
     }
-
-    #map {
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
     .top-controls {
       position: absolute;
       top: 10px;
@@ -34,8 +24,7 @@
       flex-direction: column;
       gap: 10px;
     }
-
-    .search-bar, .tools-bar {
+    .tools-bar {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -44,14 +33,7 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
-
-    .search-bar input {
-      flex: 1;
-      padding: 8px;
-      font-size: 14px;
-    }
-
-    .search-bar button, .tools-bar button {
+    .tools-bar button {
       padding: 8px 12px;
       font-size: 14px;
       border: none;
@@ -60,396 +42,129 @@
       background: #3f51b5;
       color: white;
     }
-
-    .panel {
-      position: absolute;
-      top: 120px;
-      left: 10px;
-      width: 280px;
-      max-height: 60%;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-      overflow-y: auto;
-      z-index: 1000;
-      transition: transform 0.3s ease;
-    }
-
-    .panel.hidden {
-      transform: translateX(-300px);
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      background: #f5f5f5;
-    }
-
-    .panel h3 {
-      margin: 0;
-      font-size: 16px;
-    }
-
-    .collapse-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .entry-item {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .entry-item button {
-      margin-top: 5px;
-      background: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-
-    .status-popup {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-
-    .status-popup-inner {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
-
-    .status-popup-inner button {
-      margin: 8px;
-      padding: 10px 20px;
-      font-size: 14px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .status-completed { background-color: #4caf50; color: white; }
-    .status-pending { background-color: #ff9800; color: white; }
-    .status-notreached { background-color: #f44336; color: white; }
-
-    .leaflet-top.leaflet-left {
-      top: 240px !important;
-      left: 10px !important;
-    }
-
-    @media (max-width: 600px) {
-      .panel {
-        width: 90%;
-        left: 5%;
-        max-height: 50%;
-      }
-      .leaflet-top.leaflet-left {
-        top: 300px !important;
-      }
-    }
   </style>
 </head>
 <body>
-
-<div id="map"></div>
-
-<!-- CONTROLS -->
-<div class="top-controls">
-  <div class="search-bar">
-    <input id="searchInput" type="text" placeholder="Search area (e.g. Hydra)" />
-    <button onclick="searchPlace()">Search</button>
+  <div id="map"></div>
+  <div class="top-controls">
+    <div class="tools-bar">
+      <button onclick="toggleEditMode()">🛠️ Edit Zones</button>
+      <button onclick="toggleStoreMode()">🏪 Add Store</button>
+      <button onclick="exportZones()">Export Zones</button>
+      <button onclick="exportStores()">Export Stores</button>
+    </div>
   </div>
-  <div class="tools-bar">
-    <button onclick="exportZones()">Export Zones</button>
-    <button onclick="exportStores()">Export Stores</button>
-    <button onclick="togglePanel('zonesPanel')">Toggle Zones</button>
-    <button onclick="togglePanel('storesPanel')">Toggle Stores</button>
-    <button onclick="activateAddStore()">➕ Add Store</button>
-  </div>
-</div>
 
-<!-- ZONES PANEL -->
-<div id="zonesPanel" class="panel">
-  <div class="panel-header">
-    <h3>Saved Zones</h3>
-    <button class="collapse-btn" onclick="togglePanel('zonesPanel')">📂</button>
-  </div>
-  <div id="zoneList"></div>
-</div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
+      authDomain: "zonemarkerapp.firebaseapp.com",
+      projectId: "zonemarkerapp",
+      storageBucket: "zonemarkerapp.firebasestorage.app",
+      messagingSenderId: "613702079615",
+      appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-<!-- STORES PANEL -->
-<div id="storesPanel" class="panel" style="top: 420px;">
-  <div class="panel-header">
-    <h3>Saved Stores</h3>
-    <button class="collapse-btn" onclick="togglePanel('storesPanel')">📂</button>
-  </div>
-  <div id="storeList"></div>
-</div>
+    let map = L.map('map').setView([36.7538, 3.0588], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-<!-- STATUS POPUP FOR ZONES -->
-<div id="statusPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Select Zone Status</h3>
-    <button class="status-completed" onclick="selectStatus('Completed')">✅ Completed</button>
-    <button class="status-pending" onclick="selectStatus('Pending')">🕓 Pending</button>
-    <button class="status-notreached" onclick="selectStatus('Not Reached')">❌ Not Reached</button>
-  </div>
-</div>
-
-<!-- STORE TYPE POPUP -->
-<div id="storeTypePopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Select Store Type</h3>
-    <button onclick="setStoreType('supermarket')">Supermarket</button>
-    <button onclick="setStoreType('normal')">Normal</button>
-    <button onclick="setStoreType('small')">BiroTabac</button>
-  </div>
-</div>
-
-<!-- STORE SELLING POPUP -->
-<div id="storeSellingPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Is this store selling your product?</h3>
-    <button onclick="setStoreSelling(true)">✅ Yes</button>
-    <button onclick="setStoreSelling(false)">❌ No</button>
-  </div>
-</div>
-
-<!-- LEAFLET, FIREBASE & APP SCRIPT -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
-    authDomain: "zonemarkerapp.firebaseapp.com",
-    projectId: "zonemarkerapp",
-    storageBucket: "zonemarkerapp.firebasestorage.app",
-    messagingSenderId: "613702079615",
-    appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  let map = L.map('map').setView([36.7538, 3.0588], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-  let drawnItems = new L.FeatureGroup();
-  map.addLayer(drawnItems);
-
-  let drawControl = new L.Control.Draw({
-    draw: { polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
-    edit: { featureGroup: drawnItems }
-  });
-  map.addControl(drawControl);
-
-  let newZoneLayer = null;
-  let newZoneName = "";
-  let newZoneNotes = "";
-  let addStoreMode = false;
-  let storeTemp = { lat: null, lng: null, name: "", type: "", selling: null, notes: "" };
-
-  function loadZones() {
-    drawnItems.clearLayers();
-    document.getElementById("zoneList").innerHTML = "";
-
-    db.collection("zones").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const polygon = L.polygon(data.path, {
-          color: getZoneColor(data.status),
-          fillOpacity: 0.5
-        }).addTo(drawnItems);
-
-        polygon.bindPopup(`<b>${data.name}</b><br>Status: ${data.status}<br>Notes: ${data.notes}`);
-        addZoneToList(doc.id, data);
-      });
+    let drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    let drawControl = new L.Control.Draw({
+      draw: { polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
+      edit: { featureGroup: drawnItems }
     });
-  }
 
-  function loadStores() {
-    document.getElementById("storeList").innerHTML = "";
+    let zoneEditMode = false;
+    let storeAddMode = false;
 
-    db.collection("stores").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const color = getStoreColor(data.type);
-        const marker = L.circleMarker([data.lat, data.lng], {
-          radius: 8,
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.9
-        }).addTo(map);
-
-        marker.bindPopup(`<b>${data.name}</b><br>Type: ${data.type}<br>Selling: ${data.selling ? "✅" : "❌"}<br>Notes: ${data.notes}`);
-        addStoreToList(doc.id, data);
-      });
-    });
-  }
-
-  function addZoneToList(id, data) {
-    const div = document.createElement("div");
-    div.className = "entry-item";
-    div.innerHTML = `<strong>${data.name}</strong><br>Status: ${data.status}<br>Notes: ${data.notes}<br><button onclick="deleteZone('${id}')">🗑️ Delete</button>`;
-    document.getElementById("zoneList").appendChild(div);
-  }
-
-  function addStoreToList(id, data) {
-    const div = document.createElement("div");
-    div.className = "entry-item";
-    div.innerHTML = `<strong>${data.name}</strong><br>Type: ${data.type}<br>Selling: ${data.selling ? "✅" : "❌"}<br>Notes: ${data.notes}<br><button onclick="deleteStore('${id}')">🗑️ Delete</button>`;
-    document.getElementById("storeList").appendChild(div);
-  }
-
-  function getZoneColor(status) {
-    switch (status.toLowerCase()) {
-      case "completed": return "#4caf50";
-      case "pending": return "#ff9800";
-      case "not reached": return "#f44336";
-      default: return "gray";
+    function toggleEditMode() {
+      zoneEditMode = !zoneEditMode;
+      storeAddMode = false;
+      if (zoneEditMode) {
+        map.addControl(drawControl);
+        drawnItems.eachLayer(layer => layer.options.interactive = true);
+        alert("Zone editing mode enabled.");
+      } else {
+        map.removeControl(drawControl);
+        drawnItems.eachLayer(layer => layer.options.interactive = false);
+      }
     }
-  }
 
-  function getStoreColor(type) {
-    switch (type.toLowerCase()) {
-      case "supermarket": return "blue";
-      case "normal": return "purple";
-      case "small": return "black";
-      default: return "gray";
+    function toggleStoreMode() {
+      storeAddMode = !storeAddMode;
+      zoneEditMode = false;
+      map.removeControl(drawControl);
+      drawnItems.eachLayer(layer => layer.options.interactive = false);
+      if (storeAddMode) alert("Click on the map to add a store.");
     }
-  }
 
-  map.on(L.Draw.Event.CREATED, function (e) {
-    newZoneLayer = e.layer;
-    const name = prompt("Zone Name:");
-    if (!name) return;
-    const notes = prompt("Notes (optional):");
-    newZoneName = name;
-    newZoneNotes = notes || "";
-    document.getElementById("statusPopup").style.display = "flex";
-  });
-
-  function selectStatus(status) {
-    const path = newZoneLayer.getLatLngs()[0].map(coord => ({ lat: coord.lat, lng: coord.lng }));
-    db.collection("zones").add({ name: newZoneName, notes: newZoneNotes, status: status.toLowerCase(), path }).then(() => {
-      document.getElementById("statusPopup").style.display = "none";
-      loadZones();
+    map.on("click", function(e) {
+      if (!storeAddMode) return;
+      const name = prompt("Store Name:");
+      if (!name) return;
+      const type = prompt("Store Type:");
+      const selling = confirm("Is this store selling your product?");
+      const notes = prompt("Notes (optional):");
+      db.collection("stores").add({
+        name,
+        type,
+        selling,
+        notes,
+        lat: e.latlng.lat,
+        lng: e.latlng.lng
+      }).then(() => console.log("Store added"));
     });
-  }
 
-  function activateAddStore() {
-    addStoreMode = true;
-  }
-
-  map.on("click", function(e) {
-    if (!addStoreMode) return;
-    addStoreMode = false;
-
-    const name = prompt("Store Name:");
-    if (!name) return;
-
-    storeTemp.lat = e.latlng.lat;
-    storeTemp.lng = e.latlng.lng;
-    storeTemp.name = name;
-
-    document.getElementById("storeTypePopup").style.display = "flex";
-  });
-
-  function setStoreType(type) {
-    storeTemp.type = type.toLowerCase();
-    document.getElementById("storeTypePopup").style.display = "none";
-    document.getElementById("storeSellingPopup").style.display = "flex";
-  }
-
-  function setStoreSelling(selling) {
-    storeTemp.selling = selling;
-    document.getElementById("storeSellingPopup").style.display = "none";
-    const notes = prompt("Notes (optional):");
-    storeTemp.notes = notes || "";
-
-    db.collection("stores").add({ ...storeTemp }).then(loadStores);
-  }
-
-  function deleteZone(id) {
-    db.collection("zones").doc(id).delete().then(loadZones);
-  }
-
-  function deleteStore(id) {
-    db.collection("stores").doc(id).delete().then(loadStores);
-  }
-
-  function togglePanel(id) {
-    document.getElementById(id).classList.toggle("hidden");
-  }
-
-  function exportZones() {
-    db.collection("zones").get().then(snapshot => {
-      let csv = "Name,Status,Notes,Coordinates\n";
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const coords = d.path.map(p => `(${p.lat},${p.lng})`).join(" ");
-        csv += `"${d.name}","${d.status}","${d.notes}","${coords}"\n`;
-      });
-      downloadCSV(csv, "zones.csv");
+    map.on(L.Draw.Event.CREATED, function (e) {
+      if (!zoneEditMode) return;
+      const layer = e.layer;
+      const name = prompt("Zone Name:");
+      const notes = prompt("Notes (optional):");
+      const status = prompt("Status: Completed, Pending, Not Reached");
+      const path = layer.getLatLngs()[0].map(c => ({ lat: c.lat, lng: c.lng }));
+      db.collection("zones").add({ name, notes, status, path }).then(() => console.log("Zone saved"));
+      drawnItems.addLayer(layer);
     });
-  }
 
-  function exportStores() {
-    db.collection("stores").get().then(snapshot => {
-      let csv = "Name,Type,Selling,Notes,Latitude,Longitude\n";
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        csv += `"${d.name}","${d.type}",${d.selling},"${d.notes}",${d.lat},${d.lng}\n`;
+    function exportZones() {
+      db.collection("zones").get().then(snapshot => {
+        let csv = "Name,Status,Notes,Coordinates\n";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const coords = d.path.map(p => `(${p.lat},${p.lng})`).join(" ");
+          csv += `"${d.name}","${d.status}","${d.notes}","${coords}"\n`;
+        });
+        downloadCSV(csv, "zones.csv");
       });
-      downloadCSV(csv, "stores.csv");
-    });
-  }
+    }
 
-  function downloadCSV(content, filename) {
-    const blob = new Blob([content], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function searchPlace() {
-    const query = document.getElementById("searchInput").value;
-    if (!query) return;
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.length > 0) {
-          const place = data[0];
-          map.setView([place.lat, place.lon], 14);
-        } else {
-          alert("Place not found.");
-        }
+    function exportStores() {
+      db.collection("stores").get().then(snapshot => {
+        let csv = "Name,Type,Selling,Notes,Latitude,Longitude\n";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          csv += `"${d.name}","${d.type}",${d.selling},"${d.notes}",${d.lat},${d.lng}\n`;
+        });
+        downloadCSV(csv, "stores.csv");
       });
-  }
+    }
 
-  loadZones();
-  loadStores();
-</script>
-
+    function downloadCSV(content, filename) {
+      const blob = new Blob([content], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
 </body>
 </html>
