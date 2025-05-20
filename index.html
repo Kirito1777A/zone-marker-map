@@ -313,13 +313,8 @@
 
   function addStoreToList(id, data) {
     const div = document.createElement("div");
-    <div class="entry-item">
-  <strong>${data.name}</strong><br>
-  Type: ${data.type}<br>
-  Selling: ${data.selling ? "✅" : "❌"}<br>
-  Notes: ${data.notes}<br>
-  <button onclick="editStore('${id}')">✏️ Edit</button>
-  <button onclick="deleteStore('${id}')">🗑️ Delete</button>`;
+    div.className = "entry-item";
+    div.innerHTML = `<strong>${data.name}</strong><br>Type: ${data.type}<br>Selling: ${data.selling ? "✅" : "❌"}<br>Notes: ${data.notes}<br><button onclick="deleteStore('${id}')">🗑️ Delete</button>`;
     document.getElementById("storeList").appendChild(div);
   }
 
@@ -451,28 +446,6 @@
         }
       });
   }
-  function editStore(id) {
-  db.collection("stores").doc(id).get().then(doc => {
-    const data = doc.data();
-
-    const newName = prompt("Store Name:", data.name);
-    if (!newName) return;
-
-    const newType = prompt("Type (supermarket / normal / small):", data.type);
-    if (!newType) return;
-
-    const selling = confirm("Is this store selling your product?");
-    const newNotes = prompt("Notes:", data.notes);
-
-    db.collection("stores").doc(id).update({
-      name: newName,
-      type: newType.toLowerCase(),
-      selling: selling,
-      notes: newNotes || ""
-    }).then(loadStores);
-  });
-}
-
 
   loadZones();
   loadStores();
