@@ -2,93 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Zone Marker App (Safe Mode)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Zone Marker App with Categories</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
-    #map { height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-    .top-controls { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
-    .search-bar, .tools-bar { display: flex; flex-wrap: wrap; gap: 10px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-    .search-bar input { flex: 1; padding: 8px; font-size: 14px; }
-    .search-bar button, .tools-bar button { padding: 8px 12px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; background: #3f51b5; color: white; }
-    .panel { position: absolute; top: 120px; left: 10px; width: 280px; max-height: 60%; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.15); overflow-y: auto; z-index: 1000; transition: transform 0.3s ease; }
-    .panel.hidden { transform: translateX(-300px); }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; background: #f5f5f5; }
-    .panel h3 { margin: 0; font-size: 16px; }
-    .collapse-btn { background: none; border: none; font-size: 18px; cursor: pointer; }
-    .entry-item { padding: 10px; border-bottom: 1px solid #eee; }
-    .entry-item button { margin-top: 5px; margin-right: 5px; background: #3f51b5; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
-    .status-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-    .status-popup-inner { background: white; padding: 20px; border-radius: 10px; text-align: center; }
-    .status-popup-inner button { margin: 8px; padding: 10px 20px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; }
-    .status-completed { background-color: #4caf50; color: white; }
-    .status-pending { background-color: #ff9800; color: white; }
-    .status-notreached { background-color: #f44336; color: white; }
-    .leaflet-top.leaflet-left { top: 240px !important; left: 10px !important; }
-    @media (max-width: 600px) {
-      .panel { width: 90%; left: 5%; max-height: 50%; }
-      .leaflet-top.leaflet-left { top: 300px !important; }
-    }
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; }
+    .controls { position: absolute; top: 10px; left: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; }
+    .panel { position: absolute; top: 100px; left: 10px; width: 300px; background: white; max-height: 80%; overflow-y: auto; padding: 10px; z-index: 1000; border-radius: 8px; }
+    .category-section { margin-bottom: 10px; }
+    .category-title { font-weight: bold; cursor: pointer; }
+    .item { margin-left: 10px; margin-top: 5px; }
+    button { margin-top: 5px; }
   </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="top-controls">
-  <div class="search-bar">
-    <input id="searchInput" type="text" placeholder="Search area (e.g. Hydra)" />
-    <button onclick="searchPlace()">Search</button>
-  </div>
-  <div class="tools-bar">
-    <button onclick="exportZones()">Export Zones</button>
-    <button onclick="exportStores()">Export Stores</button>
-    <button onclick="togglePanel('zonesPanel')">Toggle Zones</button>
-    <button onclick="togglePanel('storesPanel')">Toggle Stores</button>
-    <button onclick="activateAddStore()">➕ Add Store</button>
-  </div>
+<div class="controls">
+  <input id="categoryInput" placeholder="New Category" />
+  <button onclick="addCategory()">Add Category</button><br><br>
+  <select id="categorySelect"></select>
+  <button onclick="activateAddStore()">Add Store</button>
 </div>
-<div id="zonesPanel" class="panel">
-  <div class="panel-header">
-    <h3>Saved Zones</h3>
-    <button class="collapse-btn" onclick="togglePanel('zonesPanel')">📂</button>
-  </div>
-  <div id="zoneList"></div>
-</div>
-<div id="storesPanel" class="panel" style="top: 420px;">
-  <div class="panel-header">
-    <h3>Saved Stores</h3>
-    <button class="collapse-btn" onclick="togglePanel('storesPanel')">📂</button>
-  </div>
-  <div id="storeList"></div>
-</div>
-<div id="statusPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Select Zone Status</h3>
-    <button class="status-completed" onclick="selectStatus('Completed')">✅ Completed</button>
-    <button class="status-pending" onclick="selectStatus('Pending')">🕓 Pending</button>
-    <button class="status-notreached" onclick="selectStatus('Not Reached')">❌ Not Reached</button>
-  </div>
-</div>
-<div id="storeTypePopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Select Store Type</h3>
-    <button onclick="setStoreType('supermarket')">Supermarket</button>
-    <button onclick="setStoreType('normal')">Normal</button>
-    <button onclick="setStoreType('small')">BiroTabac</button>
-  </div>
-</div>
-<div id="storeSellingPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Is this store selling your product?</h3>
-    <button onclick="setStoreSelling(true)">✅ Yes</button>
-    <button onclick="setStoreSelling(false)">❌ No</button>
-  </div>
-</div>
+<div class="panel" id="storePanel"></div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="app.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
+    authDomain: "zonemarkerapp.firebaseapp.com",
+    projectId: "zonemarkerapp",
+    storageBucket: "zonemarkerapp.firebasestorage.app",
+    messagingSenderId: "613702079615",
+    appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let map = L.map('map').setView([36.75, 3.05], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  let addStoreMode = false;
+  let storeTemp = {};
+  let categories = [];
+
+  function addCategory() {
+    const name = document.getElementById('categoryInput').value.trim();
+    if (!name || categories.includes(name)) return;
+    categories.push(name);
+    updateCategorySelect();
+    document.getElementById('categoryInput').value = '';
+    renderStores();
+  }
+
+  function updateCategorySelect() {
+    const select = document.getElementById('categorySelect');
+    select.innerHTML = '';
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+  }
+
+  function activateAddStore() {
+    addStoreMode = true;
+  }
+
+  map.on('click', function(e) {
+    if (!addStoreMode) return;
+    addStoreMode = false;
+    const name = prompt('Store name:');
+    const notes = prompt('Notes:');
+    const category = document.getElementById('categorySelect').value;
+    if (!name || !category) return;
+
+    const store = {
+      name,
+      notes: notes || '',
+      category,
+      lat: e.latlng.lat,
+      lng: e.latlng.lng
+    };
+    db.collection('stores').add(store).then(loadStores);
+  });
+
+  function loadStores() {
+    db.collection('stores').get().then(snapshot => {
+      window.stores = {};
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        window.stores[doc.id] = data;
+      });
+      renderStores();
+    });
+  }
+
+  function renderStores() {
+    const panel = document.getElementById('storePanel');
+    panel.innerHTML = '';
+    categories.forEach(cat => {
+      const section = document.createElement('div');
+      section.className = 'category-section';
+
+      const title = document.createElement('div');
+      title.className = 'category-title';
+      title.textContent = cat;
+      section.appendChild(title);
+
+      for (let id in window.stores) {
+        const store = window.stores[id];
+        if (store.category === cat) {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.innerHTML = `${store.name} (${store.lat.toFixed(3)}, ${store.lng.toFixed(3)})<br>${store.notes}<br>`;
+          const btn = document.createElement('button');
+          btn.textContent = '✏️ Edit';
+          btn.onclick = () => editStore(id);
+          div.appendChild(btn);
+          section.appendChild(div);
+        }
+      }
+      panel.appendChild(section);
+    });
+  }
+
+  function editStore(id) {
+    const store = window.stores[id];
+    const newName = prompt('Store name:', store.name);
+    const newNotes = prompt('Notes:', store.notes);
+    const newCat = prompt('Category:', store.category);
+    if (!newName || !newCat) return;
+    db.collection('stores').doc(id).update({
+      name: newName,
+      notes: newNotes || '',
+      category: newCat
+    }).then(loadStores);
+  }
+
+  loadStores();
+</script>
 </body>
 </html>
