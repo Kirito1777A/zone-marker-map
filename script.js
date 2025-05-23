@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
   authDomain: "zonemarkerapp.firebaseapp.com",
@@ -11,8 +11,6 @@ const firebaseConfig = {
   messagingSenderId: "613702079615",
   appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
 };
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -28,7 +26,8 @@ let drawControl = new L.Control.Draw({
     rectangle: false,
     circle: false,
     polyline: false,
-    marker: false
+    marker: false,
+    circlemarker: false
   },
   edit: { featureGroup: drawnItems }
 });
@@ -40,29 +39,22 @@ let newZoneLayer = null;
 let addStoreMode = false;
 let storeTemp = { lat: null, lng: null };
 
-// -------------------- Load Algiers Communes --------------------
+// -------------------- Load Communes --------------------
 fetch("algiers_communes.geojson")
   .then(res => res.json())
   .then(data => {
     L.geoJSON(data, {
-      pointToLayer: function (feature, latlng) {
-        return L.circleMarker(latlng, {
-          radius: 6,
-          color: "gray",
-          fillOpacity: 0.5
-        });
-      },
-      onEachFeature: function (feature, layer) {
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+        radius: 6,
+        color: "gray",
+        fillOpacity: 0.5
+      }),
+      onEachFeature: (feature, layer) => {
         const name = feature.properties.name || "Unnamed";
         const ar_name = feature.properties.ar_name || "";
         layer.bindPopup(`<strong>${name}</strong><br>${ar_name}`);
-        bigZones.push({
-          id: name,
-          layer: layer,
-          bounds: layer.getBounds()
-        });
+        bigZones.push({ id: name, layer: layer, bounds: layer.getBounds() });
 
-        // Populate dropdown
         const option = document.createElement("option");
         option.value = name;
         option.text = name;
@@ -81,7 +73,7 @@ function highlightMunicipality(name) {
   });
 }
 
-// -------------------- Zone Drawing --------------------
+// -------------------- Draw Zones --------------------
 map.on(L.Draw.Event.CREATED, function (e) {
   newZoneLayer = e.layer;
   document.getElementById("statusPopup").style.display = "flex";
@@ -90,12 +82,21 @@ map.on(L.Draw.Event.CREATED, function (e) {
 function selectStatus(status) {
   const coords = newZoneLayer.getLatLngs()[0].map(p => ({ lat: p.lat, lng: p.lng }));
   const parent = getParentZone(coords);
-  db.collection("zones").add({
+  const color = {
+    "completed": "#4caf50",
+    "pending": "#ff9800",
+    "not reached": "#f44336"
+  }[status.toLowerCase()] || "gray";
+
+  newZoneLayer.setStyle({ color, fillOpacity: 0.4 });
+  drawnItems.addLayer(newZoneLayer);
+
+  addDoc(collection(db, "zones"), {
     status,
     path: coords,
     parent
   });
-  drawnItems.addLayer(newZoneLayer);
+
   document.getElementById("statusPopup").style.display = "none";
 }
 
@@ -130,7 +131,7 @@ function saveStore() {
   const id = document.getElementById("retailerId").value;
   const type = document.getElementById("storeCategory").value;
 
-  db.collection("stores").add({
+  addDoc(collection(db, "stores"), {
     ...storeTemp,
     name,
     retailerId: id,
