@@ -1,0 +1,917 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "554",
+        "post_code": "16001",
+        "name": "Alger Centre",
+        "ar_name": "الجزائر الوسطى"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7681618,
+          3.0404258
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "555",
+        "post_code": "16002",
+        "name": "Sidi Mhamed",
+        "ar_name": "سيدي امحمد"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.759285,
+          3.0467857
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "556",
+        "post_code": "16003",
+        "name": "El Madania",
+        "ar_name": "المدنية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7422816,
+          3.0604942
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "557",
+        "post_code": "16004",
+        "name": "Belouizdad",
+        "ar_name": "بلوزداد"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7504548,
+          3.0639145
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "558",
+        "post_code": "16005",
+        "name": "Bab El Oued",
+        "ar_name": "باب الواد"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7917802,
+          3.0445432
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "559",
+        "post_code": "16006",
+        "name": "Bologhine",
+        "ar_name": "بولوغين"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8039256,
+          3.0296193
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "560",
+        "post_code": "16007",
+        "name": "Casbah",
+        "ar_name": "القصبة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7847303,
+          3.0504945
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "561",
+        "post_code": "16008",
+        "name": "Oued Koriche",
+        "ar_name": "وادي قريش"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7850295,
+          3.0243678
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "562",
+        "post_code": "16009",
+        "name": "Bir Mourad Rais",
+        "ar_name": "بير مراد رايس"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.730271,
+          3.0257462
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "563",
+        "post_code": "16010",
+        "name": "El Biar",
+        "ar_name": "الآبيار"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7671977,
+          3.0119382
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "564",
+        "post_code": "16011",
+        "name": "Bouzareah",
+        "ar_name": "بوزريعة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7891132,
+          2.9938601
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "565",
+        "post_code": "16012",
+        "name": "Birkhadem",
+        "ar_name": "بئر خادم"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7146375,
+          3.0311349
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "566",
+        "post_code": "16013",
+        "name": "El Harrach",
+        "ar_name": "الحراش"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7120702,
+          3.1217531
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "567",
+        "post_code": "16014",
+        "name": "Baraki",
+        "ar_name": "براقي"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6701186,
+          3.0635219
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "568",
+        "post_code": "16015",
+        "name": "Oued Smar",
+        "ar_name": "وادي سمار"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7098628,
+          3.1596368
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "569",
+        "post_code": "16016",
+        "name": "Bourouba",
+        "ar_name": "بوروبة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7166963,
+          3.0955372
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "570",
+        "post_code": "16017",
+        "name": "Hussein Dey",
+        "ar_name": "حسين داي"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7402922,
+          3.0914013
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "571",
+        "post_code": "16018",
+        "name": "Kouba",
+        "ar_name": "القبة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7241467,
+          3.0598317
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "572",
+        "post_code": "16019",
+        "name": "Bachedjerah",
+        "ar_name": "باش جراح"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.723121,
+          3.0940781
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "573",
+        "post_code": "16020",
+        "name": "Dar El Beida",
+        "ar_name": "الدار البيضاء"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7024372,
+          3.1766575
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "574",
+        "post_code": "16021",
+        "name": "Bab Azzouar",
+        "ar_name": "باب الزوار"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7228311,
+          3.1689279
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "575",
+        "post_code": "16022",
+        "name": "Ben Aknoun",
+        "ar_name": "بن عكنون"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7571759,
+          2.9946244
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "576",
+        "post_code": "16023",
+        "name": "Dely Ibrahim",
+        "ar_name": "دالي ابراهيم"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7567281,
+          2.962446
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "577",
+        "post_code": "16024",
+        "name": "El Hammamet",
+        "ar_name": "الحمامات"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8024015,
+          2.9559659
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "578",
+        "post_code": "16025",
+        "name": "Rais Hamidou",
+        "ar_name": "الرايس حميدو"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8077359,
+          2.9921434
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "579",
+        "post_code": "16026",
+        "name": "Djasr Kasentina",
+        "ar_name": "جسر قسنطينة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6927735,
+          3.0610977
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "580",
+        "post_code": "16027",
+        "name": "El Mouradia",
+        "ar_name": "المرادية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7490236,
+          3.0384439
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "581",
+        "post_code": "16028",
+        "name": "Hydra",
+        "ar_name": "حيدرة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7407683,
+          3.0079149
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "582",
+        "post_code": "16029",
+        "name": "Mohammadia",
+        "ar_name": "المحمدية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7353224,
+          3.1359743
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "583",
+        "post_code": "16030",
+        "name": "Bordj El Kiffan",
+        "ar_name": "برج الكيفان"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7533604,
+          3.1868338
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "584",
+        "post_code": "16031",
+        "name": "El Magharia",
+        "ar_name": "المقرية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7305475,
+          3.1026854
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "585",
+        "post_code": "16032",
+        "name": "Beni Messous",
+        "ar_name": "بني مسوس"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7844574,
+          2.9591524
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "586",
+        "post_code": "16033",
+        "name": "Les Eucalyptus",
+        "ar_name": "الكليتوس"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.668168,
+          3.1306093
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "587",
+        "post_code": "16034",
+        "name": "Birtouta",
+        "ar_name": "بئر توتة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6424589,
+          2.9745906
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "588",
+        "post_code": "16035",
+        "name": "Tassala El Merdja",
+        "ar_name": "تسالة المرجة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6277781,
+          2.8848547
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "589",
+        "post_code": "16036",
+        "name": "Ouled Chebel",
+        "ar_name": "أولاد الشبل"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6082831,
+          2.9737753
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "590",
+        "post_code": "16037",
+        "name": "Sidi Moussa",
+        "ar_name": "سيدي موسى"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6162931,
+          3.0682748
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "591",
+        "post_code": "16038",
+        "name": "Ain Taya",
+        "ar_name": "عين طاية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7880614,
+          3.2742797
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "592",
+        "post_code": "16039",
+        "name": "Bordj El Bahri",
+        "ar_name": "برج البحري"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7880016,
+          3.2321689
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "593",
+        "post_code": "16040",
+        "name": "Marsa",
+        "ar_name": "المرسى"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8081013,
+          3.2263432
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "594",
+        "post_code": "16041",
+        "name": "Haraoua",
+        "ar_name": "هراوة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7726194,
+          3.3006834
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "595",
+        "post_code": "16042",
+        "name": "Rouiba",
+        "ar_name": "رويبة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7375877,
+          3.2491683
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "596",
+        "post_code": "16043",
+        "name": "Reghaia",
+        "ar_name": "الرغاية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7538466,
+          3.312152
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "597",
+        "post_code": "16044",
+        "name": "Ain Benian",
+        "ar_name": "عين بنيان"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7941279,
+          2.9099606
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "598",
+        "post_code": "16045",
+        "name": "Staoueli",
+        "ar_name": "سطاوالي"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7426531,
+          2.8372776
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "599",
+        "post_code": "16046",
+        "name": "Zeralda",
+        "ar_name": "زرالدة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6995503,
+          2.8049892
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "600",
+        "post_code": "16047",
+        "name": "Mahelma",
+        "ar_name": "محالمة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6721514,
+          2.8158789
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "601",
+        "post_code": "16048",
+        "name": "Rahmania",
+        "ar_name": "رحمانية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6805606,
+          2.8805201
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "602",
+        "post_code": "16049",
+        "name": "Souidania",
+        "ar_name": "سويدانية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7112067,
+          2.8684395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "603",
+        "post_code": "16050",
+        "name": "Cheraga",
+        "ar_name": "شراقة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7596098,
+          2.8933198
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "604",
+        "post_code": "16051",
+        "name": "Ouled Fayet",
+        "ar_name": "أولاد فايت"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.725135,
+          2.9078787
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "605",
+        "post_code": "16052",
+        "name": "El Achour",
+        "ar_name": "العاشور"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7269712,
+          2.9530471
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "606",
+        "post_code": "16053",
+        "name": "Draria",
+        "ar_name": "درارية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.7132847,
+          2.9677778
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "607",
+        "post_code": "16054",
+        "name": "Douera",
+        "ar_name": "دويرة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6681547,
+          2.8979868
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "608",
+        "post_code": "16055",
+        "name": "Baba Hassen",
+        "ar_name": "بابا حسن"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6959627,
+          2.9591094
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "609",
+        "post_code": "16056",
+        "name": "Khracia",
+        "ar_name": "خرايسية"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6691421,
+          2.9639691
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "610",
+        "post_code": "16057",
+        "name": "Saoula",
+        "ar_name": "السحاولة"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.6866758,
+          3.0056614
+        ]
+      }
+    }
+  ]
+}

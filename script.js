@@ -1,0 +1,131 @@
+// -------------------- Firebase Setup --------------------
+firebase.initializeApp({
+  apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
+  authDomain: "zonemarkerapp.firebaseapp.com",
+  projectId: "zonemarkerapp"
+});
+const db = firebase.firestore();
+
+// -------------------- Map Setup --------------------
+let map = L.map('map').setView([36.75, 3.05], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+let drawControl = new L.Control.Draw({
+  draw: {
+    polygon: true,
+    rectangle: false,
+    circle: false,
+    polyline: false,
+    marker: false
+  },
+  edit: { featureGroup: drawnItems }
+});
+map.addControl(drawControl);
+
+// -------------------- Globals --------------------
+let bigZones = [];
+let newZoneLayer = null;
+let addStoreMode = false;
+let storeTemp = { lat: null, lng: null };
+
+// -------------------- Load Algiers Communes --------------------
+fetch("algiers_communes.geojson")
+  .then(res => res.json())
+  .then(data => {
+    L.geoJSON(data, {
+      pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {
+          radius: 6,
+          color: "gray",
+          fillOpacity: 0.5
+        });
+      },
+      onEachFeature: function (feature, layer) {
+        const name = feature.properties.name || "Unnamed";
+        const ar_name = feature.properties.ar_name || "";
+        layer.bindPopup(`<strong>${name}</strong><br>${ar_name}`);
+        bigZones.push({
+          id: name,
+          layer: layer,
+          bounds: layer.getBounds()
+        });
+
+        // Populate dropdown
+        const option = document.createElement("option");
+        option.value = name;
+        option.text = name;
+        document.getElementById("communeSelector").appendChild(option);
+      }
+    }).addTo(map);
+  });
+
+// -------------------- Highlight Selection --------------------
+function highlightMunicipality(name) {
+  bigZones.forEach(z => {
+    z.layer.setStyle({
+      fillOpacity: z.id === name ? 0.8 : 0.2,
+      color: z.id === name ? "blue" : "gray"
+    });
+  });
+}
+
+// -------------------- Zone Drawing --------------------
+map.on(L.Draw.Event.CREATED, function (e) {
+  newZoneLayer = e.layer;
+  document.getElementById("statusPopup").style.display = "flex";
+});
+
+function selectStatus(status) {
+  const coords = newZoneLayer.getLatLngs()[0].map(p => ({ lat: p.lat, lng: p.lng }));
+  const parent = getParentZone(coords);
+  db.collection("zones").add({
+    status,
+    path: coords,
+    parent
+  });
+  drawnItems.addLayer(newZoneLayer);
+  document.getElementById("statusPopup").style.display = "none";
+}
+
+function getParentZone(latlngs) {
+  const bounds = L.polygon(latlngs).getBounds();
+  for (let z of bigZones) {
+    if (z.bounds.contains(bounds)) return z.id;
+  }
+  return "Unassigned";
+}
+
+function startSmallZone() {
+  drawControl._toolbars.draw._modes.polygon.handler.enable();
+}
+
+// -------------------- Store Adding --------------------
+function activateAddStore() {
+  addStoreMode = true;
+  alert("Click on the map to place the store");
+}
+
+map.on("click", function (e) {
+  if (!addStoreMode) return;
+  addStoreMode = false;
+  storeTemp.lat = e.latlng.lat;
+  storeTemp.lng = e.latlng.lng;
+  document.getElementById("storePopup").style.display = "flex";
+});
+
+function saveStore() {
+  const name = document.getElementById("storeName").value;
+  const id = document.getElementById("retailerId").value;
+  const type = document.getElementById("storeCategory").value;
+
+  db.collection("stores").add({
+    ...storeTemp,
+    name,
+    retailerId: id,
+    type
+  });
+
+  document.getElementById("storePopup").style.display = "none";
+}
