@@ -1,10 +1,20 @@
-// -------------------- Firebase Setup --------------------
-firebase.initializeApp({
+// -------------------- Firebase Modular SDK --------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
   apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
   authDomain: "zonemarkerapp.firebaseapp.com",
-  projectId: "zonemarkerapp"
-});
-const db = firebase.firestore();
+  projectId: "zonemarkerapp",
+  storageBucket: "zonemarkerapp.firebasestorage.app",
+  messagingSenderId: "613702079615",
+  appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // -------------------- Map Setup --------------------
 let map = L.map('map').setView([36.75, 3.05], 11);
