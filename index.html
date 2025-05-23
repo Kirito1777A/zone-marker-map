@@ -2,121 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Zone Marker App (Safe Mode)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Zone Marker App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
-    #map { height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-    .top-controls {
-      position: absolute; top: 10px; left: 10px; right: 10px;
-      z-index: 1000; display: flex; flex-direction: column; gap: 10px;
-    }
-    .search-bar, .tools-bar {
-      display: flex; flex-wrap: wrap; gap: 10px; background: white;
-      padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .search-bar input { flex: 1; padding: 8px; font-size: 14px; }
-    .search-bar button, .tools-bar button {
-      padding: 8px 12px; font-size: 14px; border: none; border-radius: 5px;
-      cursor: pointer; background: #3f51b5; color: white;
-    }
-    .panel {
-      position: absolute; top: 120px; left: 10px; width: 280px; max-height: 60%;
-      background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.15);
-      overflow-y: auto; z-index: 1000; transition: transform 0.3s ease;
-    }
-    .panel.hidden { transform: translateX(-300px); }
-    .panel-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px; border-bottom: 1px solid #ddd; background: #f5f5f5;
-    }
-    .panel h3 { margin: 0; font-size: 16px; }
-    .collapse-btn { background: none; border: none; font-size: 18px; cursor: pointer; }
-    .entry-item { padding: 10px; border-bottom: 1px solid #eee; }
-    .entry-item button {
-      margin-top: 5px; background: #f44336; color: white;
-      border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;
-    }
-    .status-popup {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
-      z-index: 2000;
-    }
-    .status-popup-inner {
-      background: white; padding: 20px; border-radius: 10px; text-align: center;
-    }
-    .status-popup-inner button {
-      margin: 8px; padding: 10px 20px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer;
-    }
-    .status-completed { background-color: #4caf50; color: white; }
-    .status-pending { background-color: #ff9800; color: white; }
-    .status-notreached { background-color: #f44336; color: white; }
-    .leaflet-top.leaflet-left { top: 240px !important; left: 10px !important; }
-    @media (max-width: 600px) {
-      .panel { width: 90%; left: 5%; max-height: 50%; }
-      .leaflet-top.leaflet-left { top: 300px !important; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <div id="map"></div>
 
+<!-- Panel & Buttons -->
 <div class="top-controls">
-  <div class="search-bar">
-    <input id="searchInput" type="text" placeholder="Search area (e.g. Hydra)" />
-    <button onclick="searchPlace()">Search</button>
-  </div>
   <div class="tools-bar">
-    <button onclick="exportZones()">Export Zones</button>
-    <button onclick="exportStores()">Export Stores</button>
-    <button onclick="togglePanel('zonesPanel')">Toggle Zones</button>
-    <button onclick="togglePanel('storesPanel')">Toggle Stores</button>
+    <select id="communeSelector" onchange="highlightMunicipality(this.value)">
+      <option value="">-- Select Municipality --</option>
+    </select>
+    <button onclick="startSmallZone()">➕ Small Zone</button>
     <button onclick="activateAddStore()">➕ Add Store</button>
   </div>
 </div>
 
-<div id="zonesPanel" class="panel">
-  <div class="panel-header">
-    <h3>Saved Zones</h3>
-    <button class="collapse-btn" onclick="togglePanel('zonesPanel')">📂</button>
-  </div>
-  <div id="zoneList"></div>
-</div>
-
-<div id="storesPanel" class="panel" style="top: 420px;">
-  <div class="panel-header">
-    <h3>Saved Stores</h3>
-    <button class="collapse-btn" onclick="togglePanel('storesPanel')">📂</button>
-  </div>
-  <div id="storeList"></div>
-</div>
-
-<div id="statusPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
+<!-- Status Popup -->
+<div id="statusPopup" class="popup" style="display:none;">
+  <div class="popup-inner">
     <h3>Select Zone Status</h3>
-    <button class="status-completed" onclick="selectStatus('Completed')">✅ Completed</button>
-    <button class="status-pending" onclick="selectStatus('Pending')">🕓 Pending</button>
-    <button class="status-notreached" onclick="selectStatus('Not Reached')">❌ Not Reached</button>
+    <button onclick="selectStatus('completed')">✅ Completed</button>
+    <button onclick="selectStatus('pending')">🕓 Pending</button>
+    <button onclick="selectStatus('not reached')">❌ Not Reached</button>
   </div>
 </div>
 
-<div id="storeTypePopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Select Store Type</h3>
-    <button onclick="setStoreType('supermarket')">Supermarket</button>
-    <button onclick="setStoreType('normal')">Normal</button>
-    <button onclick="setStoreType('small')">BiroTabac</button>
-  </div>
-</div>
-
-<div id="storeSellingPopup" class="status-popup" style="display:none;">
-  <div class="status-popup-inner">
-    <h3>Is this store selling your product?</h3>
-    <button onclick="setStoreSelling(true)">✅ Yes</button>
-    <button onclick="setStoreSelling(false)">❌ No</button>
+<!-- Store Form -->
+<div id="storePopup" class="popup" style="display:none;">
+  <div class="popup-inner">
+    <h3>Add Store</h3>
+    <input id="storeName" placeholder="Store Name" />
+    <input id="retailerId" placeholder="Retailer ID" />
+    <select id="storeCategory">
+      <option value="supermarket">Supermarket</option>
+      <option value="normal">Normal Store</option>
+      <option value="small">Bureau Tabac</option>
+    </select>
+    <button onclick="saveStore()">Save</button>
   </div>
 </div>
 
@@ -124,235 +52,6 @@
 <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBx_OnE3Eju46i2LCHDAUBg-Y-ZupdKIf8",
-  authDomain: "zonemarkerapp.firebaseapp.com",
-  projectId: "zonemarkerapp",
-  storageBucket: "zonemarkerapp.firebasestorage.app",
-  messagingSenderId: "613702079615",
-  appId: "1:613702079615:web:8c99d82debc2a1897fdb4a"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-const map = L.map('map').setView([36.7538, 3.0588], 12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-// Create pane for GeoJSON zones
-map.createPane('algerZonesPane');
-map.getPane('algerZonesPane').style.zIndex = 550;
-
-let drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-map.addControl(new L.Control.Draw({
-  draw: { polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
-  edit: { featureGroup: drawnItems }
-}));
-
-let newZoneLayer = null;
-let newZoneName = "";
-let newZoneNotes = "";
-let addStoreMode = false;
-let storeTemp = { lat: null, lng: null, name: "", type: "", selling: null, notes: "" };
-
-function loadZones() {
-  drawnItems.clearLayers();
-  document.getElementById("zoneList").innerHTML = "";
-  db.collection("zones").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const poly = L.polygon(d.path, {
-        color: getZoneColor(d.status), fillOpacity: 0.5
-      }).addTo(drawnItems);
-      poly.bindPopup(`<b>${d.name}</b><br>Status: ${d.status}<br>Notes: ${d.notes}`);
-      addZoneToList(doc.id, d);
-    });
-  });
-}
-
-function loadStores() {
-  document.getElementById("storeList").innerHTML = "";
-  db.collection("stores").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const color = getStoreColor(d.type);
-      const m = L.circleMarker([d.lat, d.lng], {
-        radius: 8, color, fillColor: color, fillOpacity: 0.9
-      }).addTo(map);
-      m.bindPopup(`<b>${d.name}</b><br>Type: ${d.type}<br>Selling: ${d.selling ? "✅" : "❌"}<br>Notes: ${d.notes}`);
-      addStoreToList(doc.id, d);
-    });
-  });
-}
-
-function addZoneToList(id, d) {
-  const div = document.createElement("div");
-  div.className = "entry-item";
-  div.innerHTML = `<strong>${d.name}</strong><br>Status: ${d.status}<br>Notes: ${d.notes}<br><button onclick="deleteZone('${id}')">🗑️ Delete</button>`;
-  document.getElementById("zoneList").appendChild(div);
-}
-
-function addStoreToList(id, d) {
-  const div = document.createElement("div");
-  div.className = "entry-item";
-  div.innerHTML = `<strong>${d.name}</strong><br>Type: ${d.type}<br>Selling: ${d.selling ? "✅" : "❌"}<br>Notes: ${d.notes}<br><button onclick="deleteStore('${id}')">🗑️ Delete</button>`;
-  document.getElementById("storeList").appendChild(div);
-}
-
-function getZoneColor(status) {
-  switch (status.toLowerCase()) {
-    case "completed": return "#4caf50";
-    case "pending": return "#ff9800";
-    case "not reached": return "#f44336";
-    default: return "gray";
-  }
-}
-
-function getStoreColor(type) {
-  switch (type.toLowerCase()) {
-    case "supermarket": return "blue";
-    case "normal": return "purple";
-    case "small": return "black";
-    default: return "gray";
-  }
-}
-
-map.on(L.Draw.Event.CREATED, function (e) {
-  newZoneLayer = e.layer;
-  const name = prompt("Zone Name:");
-  if (!name) return;
-  const notes = prompt("Notes (optional):");
-  newZoneName = name;
-  newZoneNotes = notes || "";
-  document.getElementById("statusPopup").style.display = "flex";
-});
-
-function selectStatus(status) {
-  const path = newZoneLayer.getLatLngs()[0].map(coord => ({ lat: coord.lat, lng: coord.lng }));
-  db.collection("zones").add({ name: newZoneName, notes: newZoneNotes, status: status.toLowerCase(), path }).then(() => {
-    document.getElementById("statusPopup").style.display = "none";
-    loadZones();
-  });
-}
-
-function activateAddStore() { addStoreMode = true; }
-
-map.on("click", function(e) {
-  if (!addStoreMode) return;
-  addStoreMode = false;
-  const name = prompt("Store Name:");
-  if (!name) return;
-  storeTemp = { ...storeTemp, lat: e.latlng.lat, lng: e.latlng.lng, name };
-  document.getElementById("storeTypePopup").style.display = "flex";
-});
-
-function setStoreType(type) {
-  storeTemp.type = type.toLowerCase();
-  document.getElementById("storeTypePopup").style.display = "none";
-  document.getElementById("storeSellingPopup").style.display = "flex";
-}
-
-function setStoreSelling(selling) {
-  storeTemp.selling = selling;
-  document.getElementById("storeSellingPopup").style.display = "none";
-  storeTemp.notes = prompt("Notes (optional):") || "";
-  db.collection("stores").add({ ...storeTemp }).then(loadStores);
-}
-
-function deleteZone(id) { db.collection("zones").doc(id).delete().then(loadZones); }
-function deleteStore(id) { db.collection("stores").doc(id).delete().then(loadStores); }
-function togglePanel(id) { document.getElementById(id).classList.toggle("hidden"); }
-
-function exportZones() {
-  db.collection("zones").get().then(snapshot => {
-    let csv = "Name,Status,Notes,Coordinates\n";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const coords = d.path.map(p => `(${p.lat},${p.lng})`).join(" ");
-      csv += `"${d.name}","${d.status}","${d.notes}","${coords}"\n`;
-    });
-    downloadCSV(csv, "zones.csv");
-  });
-}
-
-function exportStores() {
-  db.collection("stores").get().then(snapshot => {
-    let csv = "Name,Type,Selling,Notes,Latitude,Longitude\n";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      csv += `"${d.name}","${d.type}",${d.selling},"${d.notes}",${d.lat},${d.lng}\n`;
-    });
-    downloadCSV(csv, "stores.csv");
-  });
-}
-
-function downloadCSV(content, filename) {
-  const blob = new Blob([content], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-}
-
-function searchPlace() {
-  const q = document.getElementById("searchInput").value;
-  if (!q) return;
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.length > 0) map.setView([data[0].lat, data[0].lon], 14);
-      else alert("Place not found.");
-    });
-}
-
-// ===== LOAD GEOJSON (placeholder)
-fetch('https://raw.githubusercontent.com/fr33dz/Algeria-geojson/master/communes.geojson')
-  .then(response => response.json())
-  .then(data => {
-    const algiersCommunes = [
-      "Alger Centre", "Sidi M'Hamed", "El Madania", "Belouizdad", "El Harrach", "Baraki",
-      "Oued Smar", "Bourouba", "Bab El Oued", "Bologhine", "Rais Hamidou", "El Marsa",
-      "Bab Ezzouar", "Dar El Beïda", "Bordj El Kiffan", "Birkhadem", "Bir Mourad Raïs",
-      "Hydra", "Ben Aknoun", "El Mouradia", "Kouba", "El Magharia", "Hussein Dey",
-      "Mohammadia", "Djasr Kasentina", "Gué de Constantine", "Sidi Moussa", "Rouiba",
-      "Reghaïa", "Aïn Taya", "Hérraoua", "El Hamiz", "Staouéli", "Zéralda", "Mahelma",
-      "Rahmania", "Souidania", "Draria", "Douéra", "El Achour", "Cheraga", "Dély Brahim",
-      "Ouled Fayet", "El Biar", "Saoula", "Baba Hassen", "Kheraicia", "Tessala El Merdja",
-      "Les Eucalyptus", "Aïn Benian", "Bordj El Bahri"
-    ];
-
-    const algiersOnly = {
-      type: "FeatureCollection",
-      features: data.features.filter(feature =>
-        algiersCommunes.includes(feature.properties.name)
-      )
-    };
-
-    L.geoJson(algiersOnly, {
-      style: { color: '#0074D9', weight: 2, fillOpacity: 0.3 },
-      pane: 'algerZonesPane',
-      onEachFeature: (feature, layer) => {
-        layer.bindTooltip(feature.properties.name);
-        layer.on('click', function () {
-          if (confirm(`Add ${feature.properties.name} to zones?`)) {
-            const coords = layer.getLatLngs()[0].map(p => ({ lat: p.lat, lng: p.lng }));
-            db.collection("zones").add({
-              name: feature.properties.name,
-              notes: "",
-              status: "pending",
-              path: coords
-            }).then(loadZones);
-          }
-        });
-      }
-    }).addTo(map);
-  });
-
-
-loadZones();
-loadStores();
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
