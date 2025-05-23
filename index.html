@@ -4,26 +4,76 @@
   <meta charset="UTF-8" />
   <title>Zone Marker App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    html, body, #map {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+
+    .top-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+
+    select, button {
+      margin: 4px 0;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .popup-inner {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .popup-inner input, .popup-inner select {
+      margin: 6px 0;
+      padding: 8px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<!-- Panel & Buttons -->
+<!-- Controls -->
 <div class="top-controls">
-  <div class="tools-bar">
-    <select id="communeSelector" onchange="highlightMunicipality(this.value)">
-      <option value="">-- Select Municipality --</option>
-    </select>
-    <button onclick="startSmallZone()">➕ Small Zone</button>
-    <button onclick="activateAddStore()">➕ Add Store</button>
-  </div>
+  <select id="communeSelector" onchange="highlightMunicipality(this.value)">
+    <option value="">-- Select Municipality --</option>
+  </select>
+  <button onclick="startSmallZone()">➕ Small Zone</button>
+  <button onclick="activateAddStore()">➕ Add Store</button>
 </div>
 
-<!-- Status Popup -->
+<!-- Zone Status Popup -->
 <div id="statusPopup" class="popup" style="display:none;">
   <div class="popup-inner">
     <h3>Select Zone Status</h3>
@@ -33,7 +83,7 @@
   </div>
 </div>
 
-<!-- Store Form -->
+<!-- Store Form Popup -->
 <div id="storePopup" class="popup" style="display:none;">
   <div class="popup-inner">
     <h3>Add Store</h3>
@@ -48,10 +98,12 @@
   </div>
 </div>
 
+<!-- Leaflet JS + Draw -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="script.js"></script>
+
+<!-- Your App Script -->
+<script type="module" src="script.js"></script>
+
 </body>
 </html>
