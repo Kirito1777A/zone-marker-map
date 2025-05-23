@@ -53,7 +53,7 @@ fetch("algiers_communes.geojson")
         const name = feature.properties.name || "Unnamed";
         const ar_name = feature.properties.ar_name || "";
         layer.bindPopup(`<strong>${name}</strong><br>${ar_name}`);
-        bigZones.push({ id: name, layer: layer, bounds: layer.getBounds() });
+        bigZones.push({ id: name, layer: layer, latlng: layer.getLatLng() });
 
         const option = document.createElement("option");
         option.value = name;
@@ -103,7 +103,7 @@ function selectStatus(status) {
 function getParentZone(latlngs) {
   const bounds = L.polygon(latlngs).getBounds();
   for (let z of bigZones) {
-    if (z.bounds.contains(bounds)) return z.id;
+    if (bounds.contains(z.latlng)) return z.id;
   }
   return "Unassigned";
 }
@@ -140,3 +140,7 @@ function saveStore() {
 
   document.getElementById("storePopup").style.display = "none";
 }
+
+// -------------------- Button Handlers --------------------
+document.getElementById("btnSmallZone").addEventListener("click", startSmallZone);
+document.getElementById("btnAddStore").addEventListener("click", activateAddStore);
