@@ -144,3 +144,14 @@ function saveStore() {
 // -------------------- Button Handlers --------------------
 document.getElementById("btnSmallZone").addEventListener("click", startSmallZone);
 document.getElementById("btnAddStore").addEventListener("click", activateAddStore);
+document.getElementById("communeSelector").addEventListener("change", (e) => {
+  highlightMunicipality(e.target.value);
+});
+document.querySelectorAll("#statusPopup button").forEach(btn => {
+  btn.addEventListener("click", () => selectStatus(btn.textContent.toLowerCase()));
+});
+
+// -------------------- Expose Globals for HTML --------------------
+window.selectStatus = selectStatus;
+window.saveStore = saveStore;
+window.highlightMunicipality = highlightMunicipality;
